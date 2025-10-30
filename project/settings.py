@@ -133,4 +133,5 @@ MEDIA_ROOT = BASE_DIR / "mediafiles"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Utilisateur utilisé par mon projet Django
 AUTH_USER_MODEL = "accounts.CustomUser"
