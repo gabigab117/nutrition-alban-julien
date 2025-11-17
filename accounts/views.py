@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
+from django.contrib.auth.decorators import login_required
 from smtplib import SMTPException
 from .forms import CustomUserCreationForm
 from .verification import send_email_verification, email_verification_token
@@ -50,4 +51,7 @@ def activate(request, uidb64, token):
         messages.add_message(request, messages.ERROR, "Lien plus valide")
         return redirect("home")
     
-    
+
+@login_required
+def profile_view(request):
+    return render(request, "accounts/profile.html", context={"user": request.user})
