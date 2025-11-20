@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Profil
+{% endblock %}
+
+
+{% block title_page %}Profil{% endblock %}
+
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col text-center">
+        <p>Bienvenue, {{ user.username }}!</p>
+        <p>Email: {{ user.email }}</p>
+        <p>Date d'inscription: {{ user.date_joined|date:"d M Y" }}</p>
+        <a href="{% url 'accounts:password_change' %}" class="btn btn-primary btn-sm">Modifier mon mot de passe</a>
+    </div>
+</div>
+{% endblock %}
