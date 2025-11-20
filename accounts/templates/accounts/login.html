@@ -18,8 +18,8 @@ Connexion
             <button type="submit" class="btn btn-primary">Se connecter</button>
         </form>
         <hr>
-        <p class="text-center">Vous n'avez pas de compte ? <a href="">Inscrivez-vous</a></p>
-        <p class="text-center"><a href="">Mot de passe oublié ?</a></p>
+        <p class="text-center">Vous n'avez pas de compte ? <a href="{% url 'accounts:signup' %}">Inscrivez-vous</a></p>
+        <p class="text-center"><a href="{% url 'accounts:password_reset' %}">Mot de passe oublié ?</a></p>
     </div>
 </div>
 {% endblock %}
