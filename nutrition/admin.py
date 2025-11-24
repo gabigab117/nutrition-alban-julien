@@ -9,9 +9,10 @@ class PlateIngredientInline(admin.TabularInline):
 
 @admin.register(Ingredient)
 class AdminIngredient(admin.ModelAdmin):
-    list_display = ("name", "food_type")
+    list_display = ("name", "food_type", "calories_per_100g")
     search_fields = ("name", )
     list_filter = ("food_type", "diet_type")
+    # list_editable = ("food_type", )
 
 
 @admin.register(Plate)

@@ -1,7 +1,9 @@
+from decimal import Decimal
 from django.db import models
 from django.contrib.auth import get_user_model
 from .choices import FoodType, DietType, QuantityUnit
 from utils.validators import LETTER_SPACE_DASH_VALIDATOR
+from django.core.exceptions import ValidationError
 
 
 User = get_user_model()
@@ -17,7 +19,7 @@ class Ingredient(models.Model):
     carbs_per_100g = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Glucides pour 100g", default=0)
     fats_per_100g = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Lipides pour 100g", default=0)
     
-    average_piece_weight = models.IntegerField(verbose_name="Poids moyen par pièce (g)", default=0)
+    average_piece_weight = models.IntegerField(verbose_name="Poids moyen par pièce (g)", default=0) # blank=True, null=True, default=None
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Mis à jour le")
@@ -26,9 +28,22 @@ class Ingredient(models.Model):
         verbose_name = "Ingrédient"
         ordering = ['name']
         unique_together = ('name', 'food_type')
+        # constraints = [
+        #     models.UniqueConstraint(fields=['name', 'food_type'], name='unique_ingredient_name_food_type')
+        # ]
     
     def __str__(self):
         return self.name
+    
+    @property
+    def calories_per_100g(self):
+        result = self.protein_per_100g * 4 + self.carbs_per_100g * 4 + self.fats_per_100g * 9
+        return result.quantize(Decimal("0.01"))
+    
+    def clean(self):
+        super().clean()
+        if self.default_unit == QuantityUnit.PIECE and self.average_piece_weight <= 0:
+            raise ValidationError({"average_piece_weight": "Le poids moyen par pièce doit être positif"})
 
 
 class Plate(models.Model):
@@ -57,3 +72,24 @@ class PlateIngredient(models.Model):
     
     def __str__(self):
         return f"{self.quantity} x {self.ingredient.name} in {self.plate.name}"
+    
+    def get_nutritional_values(self):
+        quantity_in_grams = self._convert_to_grams()
+        
+        protein_per_gram = self.ingredient.protein_per_100g / 100
+        carbs_per_gram = self.ingredient.carbs_per_100g / 100
+        fats_per_gram = self.ingredient.fats_per_100g / 100
+        calories_per_gram = self.ingredient.calories_per_100g / 100
+        
+        return {
+            "protein": protein_per_gram * quantity_in_grams,
+            "carbs": carbs_per_gram * quantity_in_grams,
+            "fats": fats_per_gram * quantity_in_grams,
+            "calories": calories_per_gram * quantity_in_grams,
+        }
+    
+    def _convert_to_grams(self):
+        if self.ingredient.default_unit == QuantityUnit.GRAM:
+            return self.quantity
+        else:
+            return self.quantity * self.ingredient.average_piece_weight
