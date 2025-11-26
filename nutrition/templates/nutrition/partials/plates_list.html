@@ -1,0 +1,150 @@
+{% if plates %}
+<!-- Liste des assiettes -->
+<div class="row">
+    {% for plate in plates %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-success-subtle">
+                <h5 class="card-title mb-0 text-success">{{ plate.name }}</h5>
+                <small class="text-muted">
+                    Créée le {{ plate.created_at|date:"d/m/Y à H:i" }}
+                </small>
+            </div>
+            <div class="card-body">
+                <!-- Informations nutritionnelles -->
+                {% if plate.ingredients.exists %}
+                {% with nutritional_profile=plate.nutritional_profile %}
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="border rounded p-2 bg-light">
+                            <strong class="text-primary">{{ nutritional_profile.total_calories }}</strong>
+                            <br><small class="text-muted">kcal</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-2 bg-light">
+                            <strong class="text-info">{{ plate.ingredients.count }}</strong>
+                            <br><small class="text-muted">ingrédient{{ plate.ingredients.count|pluralize}}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Détail des macronutriments -->
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <small class="text-success fw-bold">{{ nutritional_profile.total_protein }}g</small>
+                        <br><small class="text-muted">Protéines</small>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-warning fw-bold">{{ nutritional_profile.total_carbs }}g</small>
+                        <br><small class="text-muted">Glucides</small>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-danger fw-bold">{{ nutritional_profile.total_fats }}g</small>
+                        <br><small class="text-muted">Lipides</small>
+                    </div>
+                </div>
+                {% endwith %}
+
+                <!-- Liste des ingrédients -->
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Ingrédients :</h6>
+                    <ul class="list-unstyled">
+                        {% for plate_ingredient in plate.ingredients.all %}
+                        <li class="small mb-1">
+                            <span class="badge bg-light text-dark me-1">
+                                {{ plate_ingredient.quantity }} {{ plate_ingredient.display_unit }}
+                            </span>
+                            {{ plate_ingredient.ingredient.name }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <p class="text-muted small">Aucun ingrédient ajouté</p>
+                {% endif %}
+
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100" role="group">
+                    <a href="" class="btn btn-outline-success btn-sm">Voir</a>
+                    <a href="" class="btn btn-outline-primary btn-sm">Modifier</a>
+                    <a href="" class="btn btn-outline-danger btn-sm">Supprimer</a>
+                </div>
+                <small class="text-muted d-block mt-2 text-center">
+                    Modifiée le {{ plate.updated_at|date:"d/m/Y à H:i" }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Navigation des assiettes" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link"
+                href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&laquo;
+                Première</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link"
+                href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Précédente</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link">
+                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <!-- Préserve le terme de recherche lors de la navigation entre les pages.
+                         Exemple : Si l'utilisateur recherche "poulet" et obtient 25 résultats sur 3 pages,
+                         ce paramètre garantit qu'en cliquant sur "Suivante", seules les assiettes contenant "poulet"
+                         seront affichées sur la page 2, puis la page 3, etc.
+                         Sans ce paramètre, la pagination afficherait TOUTES les assiettes de l'utilisateur. -->
+            <a class="page-link"
+                href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Suivante</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link"
+                href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Dernière
+                &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% else %}
+<!-- Message quand aucune assiette n'existe -->
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="bi bi-fork-knife" style="font-size: 4rem; color: #198754;"></i>
+    </div>
+    <h3 class="text-muted mb-3">
+        {% if request.GET.search %}
+        Aucune assiette trouvée pour "{{ request.GET.search }}"
+        {% else %}
+        Aucune assiette créée
+        {% endif %}
+    </h3>
+    <p class="text-muted mb-4">
+        {% if request.GET.search %}
+        Essayez avec un autre terme de recherche.
+        {% else %}
+        Commencez par créer votre première assiette pour suivre vos apports nutritionnels.
+        {% endif %}
+    </p>
+    {% if not request.GET.search %}
+    <a href="" class="btn btn-success btn-lg">
+        <i class="bi bi-plus-circle"></i> Créer ma première assiette
+    </a>
+    {% endif %}
+</div>
+{% endif %}
