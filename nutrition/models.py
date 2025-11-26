@@ -58,6 +58,27 @@ class Plate(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.user.username}"
+    
+    def nutritional_profile(self):
+        plate_ingredients = self.ingredients.select_related("ingredient").all()
+        total_protein = 0
+        total_carbs = 0
+        total_fats = 0
+        total_calories = 0
+        
+        for plate_ingredient in plate_ingredients:
+            nutritional_values = plate_ingredient.get_nutritional_values()
+            total_protein += nutritional_values["protein"]
+            total_carbs += nutritional_values["carbs"]
+            total_fats += nutritional_values["fats"]
+            total_calories += nutritional_values["calories"]
+        
+        return {
+            "total_protein": total_protein,
+            "total_carbs": total_carbs,
+            "total_fats": total_fats,
+            "total_calories": total_calories
+        }
 
 
 class PlateIngredient(models.Model):
