@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import Plate
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView, CreateView, DeleteView
 from django.db.models import Q
 
 
