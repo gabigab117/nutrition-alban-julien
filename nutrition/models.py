@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.urls import reverse
 from django.db import models
 from django.contrib.auth import get_user_model
 from .choices import FoodType, DietType, QuantityUnit
@@ -79,6 +80,9 @@ class Plate(models.Model):
             "total_fats": total_fats,
             "total_calories": total_calories
         }
+    
+    def get_absolute_url(self):
+        return reverse("nutrition:plate_detail", kwargs={"pk": self.pk})
 
 
 class PlateIngredient(models.Model):
@@ -114,3 +118,9 @@ class PlateIngredient(models.Model):
             return self.quantity
         else:
             return self.quantity * self.ingredient.average_piece_weight
+    
+    def display_unit(self):
+        if self.ingredient.default_unit == QuantityUnit.GRAM:
+            return "g"
+        elif self.ingredient.default_unit == QuantityUnit.PIECE:
+            return "p"

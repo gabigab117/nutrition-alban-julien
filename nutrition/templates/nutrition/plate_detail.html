@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Détails de l'assiette {{ plate.name }} - Doc Nutrition{% endblock %}
+{% block title_page %}Détails de l'assiette - {{ plate.name }}{% endblock %}
+{% block content %}
+{% if plate.ingredients.exists %}
+<div class="row">
+	<div class="col-md-8 offset-md-2">
+		<div class="card shadow-sm mb-4">
+			<div class="card-header bg-success-subtle">
+				<h5 class="card-title mb-0 text-success">{{ plate.name }}</h5>
+				<small class="text-muted">Créée le {{ plate.created_at|date:"d/m/Y à H:i" }}</small>
+			</div>
+			<div class="card-body">
+				{% with nutritional_profile=plate.nutritional_profile %}
+				<div class="row text-center mb-4">
+					<div class="col-3">
+						<div class="border rounded p-2 bg-light">
+							<strong class="text-primary">{{ nutritional_profile.total_calories }}</strong>
+							<br><small class="text-muted">kcal</small>
+						</div>
+					</div>
+					<div class="col-3">
+						<div class="border rounded p-2 bg-light">
+							<strong class="text-info">{{ nutritional_profile.total_protein }}g</strong>
+							<br><small class="text-muted">Protéines</small>
+						</div>
+					</div>
+					<div class="col-3">
+						<div class="border rounded p-2 bg-light">
+							<strong class="text-warning">{{ nutritional_profile.total_carbs }}g</strong>
+							<br><small class="text-muted">Glucides</small>
+						</div>
+					</div>
+					<div class="col-3">
+						<div class="border rounded p-2 bg-light">
+							<strong class="text-danger">{{ nutritional_profile.total_fats }}g</strong>
+							<br><small class="text-muted">Lipides</small>
+						</div>
+					</div>
+				</div>
+				{% endwith %}
+
+				<h6>Ingrédients</h6>
+				<ul class="list-group mb-3">
+					{% for pi in plate.ingredients.all %}
+					<li class="list-group-item d-flex justify-content-between align-items-center">
+						{{ pi.ingredient.name }}
+						<span class="badge bg-secondary">{{ pi.quantity }} {{ pi.display_unit }}</span>
+					</li>
+					{% endfor %}
+				</ul>
+			</div>
+			<div class="card-footer bg-transparent">
+				<a href="{% url 'nutrition:user_plates' %}" class="btn btn-outline-secondary">Retour</a>
+				<a href="" class="btn btn-outline-primary">Modifier</a>
+				<a href="" class="btn btn-outline-danger">Supprimer</a>
+			</div>
+		</div>
+	</div>
+</div>
+{% else %}
+<div class="row">
+	<div class="col-md-8 offset-md-2">
+		<div class="alert alert-info" role="alert">
+			<h5>{{ plate.name }}</h5>
+			<p class="mb-0">Cette assiette ne contient aucun ingrédient.</p>
+			<a href="{% url 'nutrition:user_plates' %}" class="btn btn-outline-secondary mt-2">Retour</a>
+			<a href="" class="btn btn-outline-primary mt-2">Ajouter mes premiers ingrédients</a>
+		</div>
+	</div>
+</div>
+{% endif %}
+{% endblock %}

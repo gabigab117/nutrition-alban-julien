@@ -31,7 +31,7 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Mon profil</a></li>
-                            <li><a class="dropdown-item" href="">Mes assiettes</a></li>
+                            <li><a class="dropdown-item" href="{% url 'nutrition:user_plates' %}">Mes assiettes</a></li>
                             <li>
                                 <form method="post" action="{% url 'accounts:logout' %}">
                                     {% csrf_token %}

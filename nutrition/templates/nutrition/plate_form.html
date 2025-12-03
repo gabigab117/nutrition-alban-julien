@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+
+{% block title %}Créer une assiette - Doc Nutrition{% endblock %}
+
+{% block title_page %}Créer une assiette{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-6">
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-success">Créer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
