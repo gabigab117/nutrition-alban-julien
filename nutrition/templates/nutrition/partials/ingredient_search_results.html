@@ -1,0 +1,35 @@
+{% if ingredients %}
+    <div class="list-group">
+        {% for ingredient in ingredients %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ ingredient.name }}</strong>
+                    <small class="text-muted d-block">{{ ingredient.get_food_type_display }} - {{ ingredient.get_diet_type_display }}</small>
+                </div>
+                <!-- 
+                Bouton d'ajout avec HTMX :
+                - hx-post : Fait une requête POST vers l'URL d'ajout d'ingrédient avec les IDs de l'assiette et de l'ingrédient
+                - hx-target : Remplace le contenu de la zone "ingredients-formset" avec la réponse (formset mis à jour)
+                - hx-include : Inclut le champ quantity correspondant à cet ingrédient dans la requête
+                -->
+                <button 
+                    class="btn btn-sm btn-outline-primary"
+                    hx-post="{% url 'nutrition:add_ingredient' plate_id=plate_id ingredient_id=ingredient.id %}"
+                    hx-target="#ingredients-formset"
+                    hx-include="[name='quantity-{{ ingredient.id }}']"
+                >
+                    Ajouter
+                </button>
+                <input 
+                    type="hidden" 
+                    name="quantity" 
+                    value="100"
+                >
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    {% if request.GET.q %}
+        <div class="text-muted">Aucun ingrédient trouvé pour "{{ request.GET.q }}"</div>
+    {% endif %}
+{% endif %}

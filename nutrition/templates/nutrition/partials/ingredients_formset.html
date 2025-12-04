@@ -1,0 +1,10 @@
+{% load crispy_forms_tags %}
+
+{{ formset.management_form }}
+                
+{% for form in formset %}
+    <div class="mb-3 border p-3 rounded">
+        <h6>{{ form.instance.ingredient.name }}</h6>
+        {{ form|crispy }}
+    </div>
+{% endfor %}

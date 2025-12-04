@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Modifier {{ plate.name }} - Doc Nutrition{% endblock %}
+
+{% block title_page %}Modifier l'assiette "{{ plate.name }}"{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8">
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Formulaire pour le nom de l'assiette -->
+            <div class="mb-4">
+                <h5>Informations de l'assiette</h5>
+                {{ plate_form|crispy }}
+            </div>
+            
+            <!-- Section d'ajout d'ingrédients -->
+            <div class="mb-4">
+                <h5>Ajouter un ingrédient</h5>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="ingredient-search" class="form-label">Rechercher un ingrédient</label>
+                            <!-- 
+                            Attributs HTMX expliqués :
+                            - hx-get : Fait une requête GET vers l'URL de recherche d'ingrédients
+                            - hx-target : Injecte la réponse dans l'élément avec l'ID "search-results"
+                            - hx-trigger : Déclenche la requête quand on tape (keyup) ou change la valeur (changed), avec un délai de 300ms pour éviter trop de requêtes
+                            - hx-include : SÉLECTEURS CSS qui disent à HTMX quels champs inclure dans la requête :
+                              * [name='plate_id'] = trouve l'élément ayant name="plate_id" (le champ caché plus bas)
+                              * [name='diet_type']:checked = trouve TOUS les éléments ayant name="diet_type" ET qui sont cochés
+                              * HTMX cherche dans TOUTE la page, peu importe où sont ces éléments !
+                            -->
+                            <input 
+                                type="text" 
+                                id="ingredient-search"
+                                name="q"
+                                class="form-control" 
+                                placeholder="Tapez le nom d'un ingrédient..."
+                                hx-get="{% url 'nutrition:search_ingredients' %}"
+                                hx-target="#search-results"
+                                hx-trigger="keyup changed delay:300ms"
+                                hx-include="[name='plate_id'], [name='diet_type']:checked"
+                            >
+                            <!-- Champ caché qui sera inclus dans chaque requête HTMX grâce à hx-include -->
+                            <input type="hidden" name="plate_id" value="{{ plate.id }}">
+                        </div>
+                        
+                        <!-- Nouveau : Filtres par diet_type -->
+                        <div class="mb-3">
+                            <label class="form-label">Filtrer par type de régime</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <!-- 
+                                Boucle Django qui génère une checkbox pour chaque type de régime :
+                                - diet_type_choices vient de la vue et contient [('OMNI', 'Omnivore'), ('VEGE', 'Vegetarian'), ('VEGAN', 'Vegan')]
+                                - value = code court (ex: 'OMNI'), label = nom affiché (ex: 'Omnivore')
+                                -->
+                                {% for value, label in diet_type_choices %}
+                                    <div class="form-check">
+                                        <!-- 
+                                        CHECKBOX avec attributs détaillés :
+                                        
+                                        🏷️ ATTRIBUTS DE BASE :
+                                        - name="diet_type" : Nom du champ côté serveur (TOUTES les checkboxes ont le même name pour être groupées)
+                                        - value="{{ value }}" : Valeur envoyée au serveur quand cochée (ex: 'OMNI', 'VEGE', 'VEGAN')
+                                          → Pourquoi pas le label ? Le code court est plus facile à traiter côté serveur
+                                        - id="diet_type_{{ value }}" : ID UNIQUE pour chaque checkbox (ex: 'diet_type_OMNI', 'diet_type_VEGE')
+                                          → Nécessaire pour associer chaque checkbox à son label spécifique
+                                        
+                                        🔗 ATTRIBUTS HTMX :
+                                        - hx-get : URL appelée quand la checkbox change d'état
+                                        - hx-target : Où injecter la réponse (zone des résultats de recherche)
+                                        - hx-trigger="change" : Déclenche la requête dès qu'on coche/décoche
+                                        - hx-include : OBLIGATOIRE car c'est CETTE checkbox qui déclenche la requête !
+                                          Sélecteurs CSS pour inclure d'autres champs :
+                                          * [name='plate_id'] = trouve le champ caché plate_id PARTOUT dans la page
+                                          * [name='q'] = trouve le champ de recherche textuelle PARTOUT dans la page  
+                                          * [name='diet_type']:checked = trouve TOUTES les checkboxes cochées PARTOUT dans la page
+                                          → HTMX scanne TOUT le DOM, peu importe où sont ces éléments !
+                                        -->
+                                        <input 
+                                            class="form-check-input" 
+                                            type="checkbox" 
+                                            name="diet_type" 
+                                            value="{{ value }}" 
+                                            id="diet_type_{{ value }}"
+                                            hx-get="{% url 'nutrition:search_ingredients' %}"
+                                            hx-target="#search-results"
+                                            hx-trigger="change"
+                                            hx-include="[name='plate_id'], [name='q'], [name='diet_type']:checked"
+                                        >
+                                        <!-- 
+                                        🏷️ LABEL ASSOCIÉ :
+                                        - for="diet_type_{{ value }}" : Lie ce label à la checkbox ayant le même ID
+                                        - Effet magique : cliquer sur le TEXTE coche/décoche automatiquement la checkbox !
+                                        - Chaque checkbox a son PROPRE label (pas un seul pour toutes)
+                                        - Exemple généré : for="diet_type_OMNI" → lie au id="diet_type_OMNI"
+                                        -->
+                                        <label class="form-check-label" for="diet_type_{{ value }}">
+                                            {{ label }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Zone où les résultats de recherche seront affichés -->
+                        <div id="search-results"></div>
+                        <!-- Div vide au départ - HTMX y injectera les résultats de recherche -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formset pour les ingrédients -->
+            <div class="mb-4">
+                <h5>Ingrédients actuels</h5>
+                <div id="ingredients-formset">
+                <!-- Inclut le formset des ingrédients qui n'est pas vide au départ -->
+                    {% include 'nutrition/partials/ingredients_formset.html' %}
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Modifier</button>
+                <a href="{{ plate.get_absolute_url }}" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

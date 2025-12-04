@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer l'assiette {{ plate.name }}{% endblock %}
+
+{% block content %}
+<form method="POST">
+{% csrf_token %}
+<p>Êtes-vous sûr de vouloir supprimer "{{ plate.name }}" ?</p>
+    <input type="submit" value="Oui supprimer !" class="btn btn-danger">
+</form>
+{% endblock %}
